@@ -7,6 +7,7 @@ const {
 } = require('../controllers/movie');
 
 movieRouter.get('/', getMovies);
+
 movieRouter.post('/', celebrate({
   body: Joi.object().keys({
     country: Joi.string().required(),
@@ -22,6 +23,7 @@ movieRouter.post('/', celebrate({
     nameEN: Joi.string().required(),
   }),
 }), createMovie);
+
 movieRouter.delete('/:movieId', deleteMovie);
 
 module.exports = movieRouter;

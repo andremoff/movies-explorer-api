@@ -3,38 +3,36 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const escapeHtml = require('escape-html');
-const rateLimit = require('express-rate-limit');
 const { celebrate } = require('celebrate');
 const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const { userSchema, loginSchema } = require('./middlewares/validationSchemas');
 const { login, createUser } = require('./controllers/users');
-const usersRouter = require('./routes/users');
-const movieRouter = require('./routes/movie');
+const routes = require('./routes');
 const auth = require('./middlewares/auth');
-const handleError = require('./middlewares/handleError');
 const NotFoundError = require('./errors/NotFoundError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const cors = require('./middlewares/cors');
+const { NOT_FOUND_ERROR, INTERNAL_SERVER_ERROR } = require('./utils/constants');
+const { MONGO_DB_ADDRESS } = require('./utils/config');
+const limiter = require('./middlewares/rateLimiter');
 
+// Создание express-приложения
 const app = express();
 const PORT = 3000;
 
+// Использование middleware
 app.use(cors);
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
-
+app.use(limiter);
 app.use(helmet());
 
 // Логгер запросов
 app.use(requestLogger);
 
-app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 
+// Регистрация пользователя
 app.post('/signup', celebrate({ body: userSchema }), (req, res, next) => {
   const {
     email, password, name,
@@ -49,6 +47,7 @@ app.post('/signup', celebrate({ body: userSchema }), (req, res, next) => {
   createUser(req, res, next, sanitizedData);
 });
 
+// Авторизация пользователя
 app.post('/signin', celebrate({ body: loginSchema }), (req, res, next) => {
   const { email, password } = req.body;
 
@@ -60,19 +59,21 @@ app.post('/signin', celebrate({ body: loginSchema }), (req, res, next) => {
   login(req, res, next, sanitizedData);
 });
 
+// Выход из системы
 app.get('/logout', (req, res) => {
   res.clearCookie('jwt');
   res.redirect('/');
 });
 
+// Проверка авторизации
 app.use(auth);
 
-app.use('/users', usersRouter);
-app.use('/movies', movieRouter);
+// Подключение роутов
+app.use(routes);
 
 // Обработка несовпадающих маршрутов (404 ошибка)
 app.use((req, res, next) => {
-  const err = new NotFoundError('Запрашиваемый ресурс не найден');
+  const err = new NotFoundError(NOT_FOUND_ERROR);
   next(err);
 });
 
@@ -82,10 +83,16 @@ app.use(errorLogger);
 // Обработка ошибок celebrate/Joi
 app.use(errors());
 
-// Обработчик ошибок
-app.use(handleError);
+// Централизованный обработчик ошибок
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || INTERNAL_SERVER_ERROR;
+  res.status(statusCode).json({ message });
+  next();
+});
 
-mongoose.connect('mongodb://127.0.0.1:27017/bitfilmsdb', { useNewUrlParser: true })
+// Подключение к MongoDB и запуск приложения
+mongoose.connect(MONGO_DB_ADDRESS, { useNewUrlParser: true })
   .then(() => {
     app.listen(PORT);
   });
