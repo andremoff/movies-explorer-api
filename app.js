@@ -60,7 +60,7 @@ app.post('/signin', celebrate({ body: loginSchema }), (req, res, next) => {
 });
 
 // Выход из системы
-app.get('/logout', (req, res) => {
+app.get('/signout', (req, res) => {
   res.clearCookie('jwt');
   res.redirect('/');
 });
