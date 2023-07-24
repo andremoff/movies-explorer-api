@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
-const escapeHtml = require('escape-html');
 const { celebrate } = require('celebrate');
 const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
@@ -33,36 +32,15 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Регистрация пользователя
-app.post('/signup', celebrate({ body: userSchema }), (req, res, next) => {
-  const {
-    email, password, name,
-  } = req.body;
-
-  const sanitizedData = {
-    name: escapeHtml(name),
-    email: escapeHtml(email),
-    password,
-  };
-
-  createUser(req, res, next, sanitizedData);
-});
+app.post('/signup', celebrate({ body: userSchema }), createUser);
 
 // Авторизация пользователя
-app.post('/signin', celebrate({ body: loginSchema }), (req, res, next) => {
-  const { email, password } = req.body;
-
-  const sanitizedData = {
-    email: escapeHtml(email),
-    password,
-  };
-
-  login(req, res, next, sanitizedData);
-});
+app.post('/signin', celebrate({ body: loginSchema }), login);
 
 // Выход из системы
 app.get('/signout', (req, res) => {
   res.clearCookie('jwt');
-  res.redirect('/');
+  res.status(200).send({ message: 'Успешный выход из системы' });
 });
 
 // Проверка авторизации

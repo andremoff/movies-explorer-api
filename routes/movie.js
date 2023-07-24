@@ -1,29 +1,10 @@
 const movieRouter = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
-const {
-  getMovies,
-  createMovie,
-  deleteMovie,
-} = require('../controllers/movie');
+const { celebrate } = require('celebrate');
+const { getMovies, createMovie, deleteMovie } = require('../controllers/movie');
+const { movieSchema, movieIdSchema } = require('../middlewares/validationSchemas');
 
 movieRouter.get('/', getMovies);
-
-movieRouter.post('/', celebrate({
-  body: Joi.object().keys({
-    country: Joi.string().required(),
-    director: Joi.string().required(),
-    duration: Joi.number().required(),
-    year: Joi.string().required(),
-    description: Joi.string().required(),
-    image: Joi.string().required().uri(),
-    trailerLink: Joi.string().required().uri(),
-    thumbnail: Joi.string().required().uri(),
-    movieId: Joi.number().required(),
-    nameRU: Joi.string().required(),
-    nameEN: Joi.string().required(),
-  }),
-}), createMovie);
-
-movieRouter.delete('/:movieId', deleteMovie);
+movieRouter.post('/', celebrate({ body: movieSchema }), createMovie);
+movieRouter.delete('/:movieId', celebrate({ params: movieIdSchema }), deleteMovie);
 
 module.exports = movieRouter;

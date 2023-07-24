@@ -13,6 +13,11 @@ const userSchema = Joi.object().keys({
   password: Joi.string().required().min(6),
 });
 
+const userUpdateSchema = Joi.object().keys({
+  name: Joi.string().min(2).max(30).required(),
+  email: Joi.string().required().email(),
+});
+
 const movieSchema = Joi.object().keys({
   country: Joi.string().required(),
   director: Joi.string().required(),
@@ -34,6 +39,7 @@ const movieIdSchema = Joi.object().keys({
 module.exports = {
   loginSchema,
   userSchema,
+  userUpdateSchema,
   movieSchema,
   movieIdSchema,
 };
