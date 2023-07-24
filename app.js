@@ -8,7 +8,6 @@ const { errors } = require('celebrate');
 const { userSchema, loginSchema } = require('./middlewares/validationSchemas');
 const { login, createUser } = require('./controllers/users');
 const routes = require('./routes');
-const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/NotFoundError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const cors = require('./middlewares/cors');
@@ -42,9 +41,6 @@ app.get('/signout', (req, res) => {
   res.clearCookie('jwt');
   res.status(200).send({ message: 'Успешный выход из системы' });
 });
-
-// Проверка авторизации
-app.use(auth);
 
 // Подключение роутов
 app.use(routes);
