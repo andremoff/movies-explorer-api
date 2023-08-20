@@ -101,8 +101,7 @@ const login = async (req, res, next) => {
     return res
       .cookie('jwt', token, {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        sameSite: 'Strict',
         maxAge: 3600000 * 24 * 7,
       })
       .json({ message: 'Авторизация успешна', token });
